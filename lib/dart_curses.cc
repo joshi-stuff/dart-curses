@@ -54,6 +54,7 @@ int64_t _get_int(Dart_NativeArguments args, int i) {
 #define RETURN_NULL Dart_SetReturnValue(args, Dart_Null());return;
 #define RETURN_WINDOW(window) Dart_SetReturnValue(args, HandleError(Dart_NewInteger((int64_t)window)));return;
 #define RETURN_INT(value) Dart_SetReturnValue(args, HandleError(Dart_NewInteger(value)));return;
+#define RETURN_SEND_PORT(service_port) Dart_SetReturnValue(args, HandleError(Dart_NewSendPort(service_port)));return;
 
 /*****************************************************************************/
 ValueLookup value_list[] = {
@@ -146,6 +147,14 @@ EXPORT(nocbreak, {
 
 EXPORT(noecho, {
 	noecho();
+
+	RETURN_NULL
+})
+
+EXPORT(set_escdelay, {
+	ARG_INT(0, delay);
+
+	set_escdelay(delay);
 
 	RETURN_NULL
 })
@@ -293,6 +302,31 @@ EXPORT(delwin, {
 	RETURN_NULL
 })
 
+void wrapped_wgetch(Dart_Port dest_port_id, Dart_CObject* message) {
+	Dart_CObject* _window = message->value.as_array.values[0];
+	Dart_CObject* _receivePort = message->value.as_array.values[1];
+
+	int64_t window = _window->value.as_int64;
+	Dart_Port receivePort = _receivePort->value.as_send_port;
+	
+	int64_t key = wgetch((WINDOW*)window);
+
+	Dart_CObject result;
+	result.type = Dart_CObject_kInt64;
+	result.value.as_int64 = key;
+	Dart_PostCObject(receivePort, &result);
+}
+
+EXPORT(new_wgetch, {
+	Dart_Port service_port = Dart_NewNativePort("_wgetch", wrapped_wgetch, true);
+
+	if (service_port != ILLEGAL_PORT) {
+		RETURN_SEND_PORT(service_port)
+	} else {
+		RETURN_NULL
+	}
+})
+
 
 /*****************************************************************************/
 
@@ -307,6 +341,7 @@ FunctionLookup function_list[] = {
 	{"_init_pair", d_init_pair},
 	{"_nocbreak", d_nocbreak},
 	{"_noecho", d_noecho},
+	{"_set_escdelay", d_set_escdelay},
 	{"_start_color", d_start_color},
 	{"_endwin", d_endwin},
 
@@ -323,6 +358,8 @@ FunctionLookup function_list[] = {
 	{"_wclear", d_wclear},
 	{"_wrefresh", d_wrefresh},
 	{"_delwin", d_delwin},
+
+	{"_new_wgetch", d_new_wgetch},
 
 	{NULL, NULL}
 };

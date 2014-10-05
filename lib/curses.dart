@@ -1,5 +1,8 @@
 library curses;
 
+import 'dart:async';
+import 'dart:isolate';
+
 import 'dart-ext:dart_curses';
 
 Screen _stdscr;
@@ -67,22 +70,28 @@ class Screen extends Window {
 
   Screen._(int window) : super._(window);
 
-  void setup({bool autoRefresh: false, CursorVisibility cursorVisibility:
-      CursorVisibility.NORMAL}) {
+  void setup({bool autoRefresh: true, CursorVisibility cursorVisibility:
+      CursorVisibility.NORMAL, escDelay: null}) {
     noecho();
     cbreak();
     keypad(true);
-    setAutoRefresh(autoRefresh);
     curs_set(cursorVisibility);
     start_color();
+    if (escDelay != null) {
+      set_escdelay(escDelay);
+    }
+    setAutoRefresh(autoRefresh);
   }
 
-  void dispose() {
+  void dispose({bool clear: true}) {
+    if (clear) {
+      this.clear();
+    }
     keypad(false);
     nocbreak();
     echo();
     _endwin();
-    super.dispose();
+    super.dispose(clear: false);
   }
 
   void cbreak() {
@@ -115,6 +124,11 @@ class Screen extends Window {
     _noecho();
   }
 
+  void set_escdelay(int delay) {
+    _window;
+    _set_escdelay(delay);
+  }
+
   void start_color() {
     _window;
     _start_color();
@@ -122,12 +136,25 @@ class Screen extends Window {
 
 }
 
+class Point {
+
+  int row;
+  int col;
+
+  Point(this.row, this.col);
+
+  Point clone() => new Point(row, col);
+
+}
+
 class Size {
 
-  final int rows;
-  final int columns;
+  int rows;
+  int columns;
 
-  const Size(this.rows, this.columns);
+  Size(this.rows, this.columns);
+
+  Size clone() => new Size(rows, columns);
 
 }
 
@@ -136,8 +163,8 @@ class Window {
   int __window;
   bool _autoRefresh = false;
 
-  Window(int height, int width, int row, int col, {bool autoRefresh: false}) {
-    __window = _newwin(height, width, row, col);
+  Window(Point location, Size size, {bool autoRefresh: true}) {
+    __window = _newwin(size.rows, size.columns, location.row, location.col);
     _autoRefresh = autoRefresh;
   }
 
@@ -147,12 +174,15 @@ class Window {
     _autoRefresh = active;
   }
 
-  void dispose() {
+  void dispose({bool clear: true}) {
+    if (clear) {
+      this.clear();
+    }
     _delwin(_window);
     __window = null;
   }
 
-  void addstr(String str, {int row: -1, int col: -1, int maxLength: -1, int colorPair: null,
+  void addstr(String str, {Point location: null, int maxLength: -1, int colorPair: null,
       List<Attribute> attributes: const [
       Attribute._NONE]}) {
 
@@ -164,14 +194,10 @@ class Window {
 
     stdscr.attrset(colorPair: colorPair, attributes: attributes);
 
-    if ((row == -1) || (col == -1)) {
-      if ((row != -1) || (col != -1)) {
-        throw new ArgumentError('When using row and col both must be specified');
-      }
-
+    if (location == null) {
       _waddnstr(_window, str, maxLength);
     } else {
-      _mvwaddnstr(_window, row, col, str, maxLength);
+      _mvwaddnstr(_window, location.row, location.col, str, maxLength);
     }
 
     _attrset(_window, saved_attr);
@@ -233,6 +259,21 @@ class Window {
     _wrefresh(_window);
   }
 
+  Future<int> wgetch() {
+    final completer = new Completer();
+
+    final receivePort = new ReceivePort();
+
+    receivePort.listen((key) {
+      receivePort.close();
+      completer.complete(key);
+    });
+
+    _wgetch.send([_window, receivePort.sendPort]);
+
+    return completer.future;
+  }
+
   int get _window {
     if (__window == null) {
       throw new StateError('Window has been disposed');
@@ -258,10 +299,11 @@ void _echo() native '_echo';
 void _init_pair(int colorPair, int fg, int bg) native "_init_pair";
 void _nocbreak() native '_nocbreak';
 void _noecho() native '_noecho';
+void _set_escdelay(int delay) native '_set_escdelay';
 void _start_color() native '_start_color';
 void _endwin() native '_endwin';
 
-int _newwin(int height, int width, int row, int col) native '_newwin';
+int _newwin(int rows, int columns, int row, int col) native '_newwin';
 int _attr_get(int window) native '_attr_get';
 void _attroff(int window, int attr) native '_attroff';
 void _attron(int window, int attr) native '_attron';
@@ -275,3 +317,6 @@ void _waddnstr(int window, String str, int maxLength) native '_waddnstr';
 void _wclear(int window) native '_wclear';
 void _wrefresh(int window) native '_wrefresh';
 void _delwin(int window) native '_delwin';
+
+SendPort _new_wgetch() native "_new_wgetch";
+final _wgetch = _new_wgetch();

@@ -4,28 +4,32 @@
 
 library test_curses;
 
-import 'dart:io';
 import 'package:curses/curses.dart';
 
 void main() {
-  stdscr.setup(autoRefresh: true, cursorVisibility: CursorVisibility.INVISIBLE);
+  stdscr.setup(autoRefresh: true, cursorVisibility: CursorVisibility.INVISIBLE, escDelay: 1);
 
   stdscr.init_pair(1, Color.RED, Color.BLACK);
 
-  stdscr.addstr('hola', row: 1, col: 1, colorPair: 1, attributes: [Attribute.REVERSE]);
-  stdscr.addstr('adios', row: 2, col: 1);
-  stdscr.addstr('mundo', row: 3, col: 1, colorPair: 1, attributes: [Attribute.BOLD]);
+  stdscr.addstr('hola', location: new Point(1, 1), colorPair: 1, attributes: [Attribute.REVERSE]);
+  stdscr.addstr('adios', location: new Point(2, 1));
+  stdscr.addstr('mundo', location: new Point(3, 1), colorPair: 1, attributes: [Attribute.BOLD]);
 
   var size = stdscr.getmaxyx();
-  stdscr.addstr('${size.rows} x ${size.columns}', row: 4, col: 1);
-  stdscr.addstr('XXX', row: size.rows-1, col: size.columns-4);
+  stdscr.addstr('${size.rows} x ${size.columns}', location: new Point(4, 1));
+  stdscr.addstr('XXX', location: new Point(size.rows-1, size.columns-4));
 
-  var w = new Window(10, 10, 10, 10, autoRefresh: true);
+  var w = new Window(new Point(10, 10), new Size(10, 10), autoRefresh: true);
   w.border();
-  w.addstr('Lili', row: 1, col: 1);
+  w.addstr('Lili', location: new Point(1, 1));
   //w.clear();
 
-  stdin.readByteSync();
-  w.dispose();
-  stdscr.dispose();
+  w.wgetch().then((key) {
+    w.dispose();
+    stdscr.dispose();
+
+    var strKey = new String.fromCharCode(key);
+    print("key = $strKey");
+  });
+
 }
