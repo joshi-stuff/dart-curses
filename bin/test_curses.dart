@@ -24,6 +24,10 @@ void main() {
   w.addstr('Lili', location: new Point(1, 1));
   //w.clear();
 
+  var w2 = new Window(new Point(20, 10), new Size(10, 10), autoRefresh: true);
+  w2.border();
+  w2.addstr('Lolo', location: new Point(1, 1));
+
   w.wgetch().then((key) {
     w.dispose();
     stdscr.dispose();

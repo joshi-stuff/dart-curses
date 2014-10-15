@@ -5,3 +5,5 @@ description: Bindings for curses library in Dart
 homepage: https://github.com/izaera/dart-curses
 environment:
   sdk: '>=0.8.10+6 <2.0.0'
+dependencies:
+  logging: any

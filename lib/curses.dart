@@ -3,9 +3,12 @@ library curses;
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:logging/logging.dart';
+
 import 'dart-ext:dart_curses';
 
 Screen _stdscr;
+final Logger _log = new Logger('curses');
 
 //final int COLORS = _get_curses_value("COLORS");
 //final int COLOR_PAIRS = _get_curses_value("COLOR_PAIRS");
@@ -20,49 +23,234 @@ Screen get stdscr {
 
 class Attribute {
 
-  static final ALTCHARSET = new Attribute(_get_curses_value('ALTCHARSET'));
-  static final BLINK = new Attribute(_get_curses_value('BLINK'));
-  static final BOLD = new Attribute(_get_curses_value('BOLD'));
-  static final DIM = new Attribute(_get_curses_value('DIM'));
-  static final NORMAL = new Attribute(_get_curses_value('NORMAL'));
-  static final REVERSE = new Attribute(_get_curses_value('REVERSE'));
-  static final STANDOUT = new Attribute(_get_curses_value('STANDOUT'));
-  static final UNDERLINE = new Attribute(_get_curses_value('UNDERLINE'));
+  static const NONE = const Attribute._none();
 
-  static const _NONE = const Attribute(0);
+  static final ALTCHARSET = new Attribute._fromCurses('ALTCHARSET');
+  static final BLINK = new Attribute._fromCurses('BLINK');
+  static final BOLD = new Attribute._fromCurses('BOLD');
+  static final DIM = new Attribute._fromCurses('DIM');
+  static final NORMAL = new Attribute._fromCurses('NORMAL');
+  static final REVERSE = new Attribute._fromCurses('REVERSE');
+  static final STANDOUT = new Attribute._fromCurses('STANDOUT');
+  static final UNDERLINE = new Attribute._fromCurses('UNDERLINE');
 
-  final int value;
+  final String name;
+  final int _value;
 
-  const Attribute(this.value);
+  Attribute._fromCurses(String _name)
+      : name = _name,
+        _value = _get_curses_value(_name);
+
+  const Attribute._none()
+      : name = 'NONE',
+        _value = 0;
 
 }
 
 class Color extends Attribute {
 
-  static final BLACK = new Color(_get_curses_value('BLACK'));
-  static final RED = new Color(_get_curses_value('RED'));
-  static final GREEN = new Color(_get_curses_value('GREEN'));
-  static final YELLOW = new Color(_get_curses_value('YELLOW'));
-  static final BLUE = new Color(_get_curses_value('BLUE'));
-  static final MAGENTA = new Color(_get_curses_value('MAGENTA'));
-  static final CYAN = new Color(_get_curses_value('CYAN'));
-  static final WHITE = new Color(_get_curses_value('WHITE'));
+  static const NONE = const Color._none();
 
-  static const _NONE = const Color(0);
+  static final BLACK = new Color._fromCurses('BLACK');
+  static final RED = new Color._fromCurses('RED');
+  static final GREEN = new Color._fromCurses('GREEN');
+  static final YELLOW = new Color._fromCurses('YELLOW');
+  static final BLUE = new Color._fromCurses('BLUE');
+  static final MAGENTA = new Color._fromCurses('MAGENTA');
+  static final CYAN = new Color._fromCurses('CYAN');
+  static final WHITE = new Color._fromCurses('WHITE');
 
-  const Color(int value) : super(value);
+  Color._fromCurses(String name) : super._fromCurses(name);
+
+  const Color._none() : super._none();
 
 }
 
 class CursorVisibility {
 
-  static const INVISIBLE = const CursorVisibility(0);
-  static const NORMAL = const CursorVisibility(1);
-  static const HIGH = const CursorVisibility(2);
+  static const INVISIBLE = const CursorVisibility('INVISIBLE', 0);
+  static const NORMAL = const CursorVisibility('NORMAL', 1);
+  static const HIGH = const CursorVisibility('HIGH', 2);
 
-  final int value;
+  final String name;
+  final int _value;
 
-  const CursorVisibility(this.value);
+  const CursorVisibility(this.name, this._value);
+
+}
+
+class Key {
+
+  static const _EXTRA_KEYS = const <String, int>{
+    'ESC': 27,
+  };
+
+  static const _CURSES_KEYS = const <String>[
+      'F1',
+      'F2',
+      'F3',
+      'F4',
+      'F5',
+      'F6',
+      'F7',
+      'F8',
+      'F9',
+      'F10',
+      'F11',
+      'F12',
+      'CODE_YES',
+      'BREAK',
+      'SRESET',
+      'RESET',
+      'DOWN',
+      'UP',
+      'LEFT',
+      'RIGHT',
+      'HOME',
+      'BACKSPACE',
+      'DL',
+      'IL',
+      'DC',
+      'IC',
+      'EIC',
+      'CLEAR',
+      'EOS',
+      'EOL',
+      'SF',
+      'SR',
+      'NPAGE',
+      'PPAGE',
+      'STAB',
+      'CTAB',
+      'CATAB',
+      'ENTER',
+      'PRINT',
+      'LL',
+      'A1',
+      'A3',
+      'B2',
+      'C1',
+      'C3',
+      'BTAB',
+      'BEG',
+      'CANCEL',
+      'CLOSE',
+      'COMMAND',
+      'COPY',
+      'CREATE',
+      'END',
+      'EXIT',
+      'FIND',
+      'HELP',
+      'MARK',
+      'MESSAGE',
+      'MOVE',
+      'NEXT',
+      'OPEN',
+      'OPTIONS',
+      'PREVIOUS',
+      'REDO',
+      'REFERENCE',
+      'REFRESH',
+      'REPLACE',
+      'RESTART',
+      'RESUME',
+      'SAVE',
+      'SBEG',
+      'SCANCEL',
+      'SCOMMAND',
+      'SCOPY',
+      'SCREATE',
+      'SDC',
+      'SDL',
+      'SELECT',
+      'SEND',
+      'SEOL',
+      'SEXIT',
+      'SFIND',
+      'SHELP',
+      'SHOME',
+      'SIC',
+      'SLEFT',
+      'SMESSAGE',
+      'SMOVE',
+      'SNEXT',
+      'SOPTIONS',
+      'SPREVIOUS',
+      'SPRINT',
+      'SREDO',
+      'SREPLACE',
+      'SRIGHT',
+      'SRSUME',
+      'SSAVE',
+      'SSUSPEND',
+      'SUNDO',
+      'SUSPEND',
+      'UNDO',
+      'MOUSE',
+      'RESIZE',
+      'EVENT'];
+
+  static final _keysByKeyCode = <int, Key>{};
+  static final _keysByName = <String, Key>{};
+
+  static void _registerNamedKeys() {
+    if (_keysByKeyCode.isEmpty) {
+      _CURSES_KEYS.forEach((name) {
+        new Key._(name, _get_curses_value('KEY_${name}'));
+      });
+
+      _EXTRA_KEYS.forEach((name, keyCode) {
+        new Key._(name, keyCode);
+      });
+    }
+  }
+
+  final String name;
+  final int _keyCode;
+
+  factory Key(String name) {
+    _registerNamedKeys();
+
+    var key;
+
+    if (name.length == 1) {
+      int keyCode = name.codeUnits[0];
+
+      key = _keysByKeyCode[keyCode];
+
+      if (key == null) {
+        key = new Key._(name, keyCode);
+      }
+    } else {
+      key = _keysByName[name];
+
+      if (key == null) {
+        throw new ArgumentError("No key with name '${name}' exists");
+      }
+    }
+
+    return key;
+  }
+
+  factory Key._fromKeyCode(int keyCode) {
+    _registerNamedKeys();
+
+    var key = _keysByKeyCode[keyCode];
+
+    if (key == null) {
+      key = new Key._(new String.fromCharCode(keyCode), keyCode);
+    }
+
+    return key;
+  }
+
+  Key._(this.name, this._keyCode) {
+    _keysByKeyCode[_keyCode] = this;
+    _keysByName[name] = this;
+  }
+
+  String toString() => 'Key(${name}, ${_keyCode})';
 
 }
 
@@ -70,8 +258,8 @@ class Screen extends Window {
 
   Screen._(int window) : super._(window);
 
-  void setup({bool autoRefresh: true, CursorVisibility cursorVisibility:
-      CursorVisibility.NORMAL, escDelay: null}) {
+  void setup({bool autoRefresh: true, CursorVisibility cursorVisibility: CursorVisibility.NORMAL,
+      escDelay: null}) {
     noecho();
     cbreak();
     keypad(true);
@@ -80,7 +268,7 @@ class Screen extends Window {
     if (escDelay != null) {
       set_escdelay(escDelay);
     }
-    setAutoRefresh(autoRefresh);
+    this.autoRefresh = autoRefresh;
   }
 
   void dispose({bool clear: true}) {
@@ -101,7 +289,7 @@ class Screen extends Window {
 
   void curs_set(CursorVisibility visibility) {
     _window;
-    _curs_set(visibility.value);
+    _curs_set(visibility._value);
   }
 
   void echo() {
@@ -111,7 +299,7 @@ class Screen extends Window {
 
   void init_pair(int colorPair, Color fg, Color bg) {
     _window;
-    _init_pair(colorPair, fg.value, bg.value);
+    _init_pair(colorPair, fg._value, bg._value);
   }
 
   void nocbreak() {
@@ -138,40 +326,46 @@ class Screen extends Window {
 
 class Point {
 
-  int row;
-  int col;
+  final int row;
+  final int col;
 
-  Point(this.row, this.col);
+  const Point(this.row, this.col);
 
-  Point clone() => new Point(row, col);
+  String toString() => "Point($row, $col)";
 
 }
 
 class Size {
 
-  int rows;
-  int columns;
+  final int rows;
+  final int columns;
 
-  Size(this.rows, this.columns);
+  const Size(this.rows, this.columns);
 
-  Size clone() => new Size(rows, columns);
+  String toString() => "Size($rows x $columns)";
 
 }
 
 class Window {
 
   int __window;
-  bool _autoRefresh = false;
+  bool autoRefresh = false;
 
   Window(Point location, Size size, {bool autoRefresh: true}) {
     __window = _newwin(size.rows, size.columns, location.row, location.col);
-    _autoRefresh = autoRefresh;
+    _log.fine("Window: ${__window}");
+    this.autoRefresh = autoRefresh;
   }
 
   Window._(this.__window);
 
-  void setAutoRefresh([bool active = true]) {
-    _autoRefresh = active;
+  String toString() => 'Window(${_window})';
+
+  int get _window {
+    if (__window == null) {
+      throw new StateError('Window has been disposed');
+    }
+    return __window;
   }
 
   void dispose({bool clear: true}) {
@@ -184,7 +378,7 @@ class Window {
 
   void addstr(String str, {Point location: null, int maxLength: -1, int colorPair: null,
       List<Attribute> attributes: const [
-      Attribute._NONE]}) {
+      Attribute.NONE]}) {
 
     if (maxLength == -1) {
       maxLength = str.length;
@@ -207,15 +401,15 @@ class Window {
 
   void attroff(Attribute attribute) {
     _window;
-    _attroff(_window, attribute.value);
+    _attroff(_window, attribute._value);
   }
 
   void attron(Attribute attribute) {
     _window;
-    _attron(_window, attribute.value);
+    _attron(_window, attribute._value);
   }
 
-  void attrset({int colorPair: null, List<Attribute> attributes: const [Attribute._NONE]}) {
+  void attrset({int colorPair: null, List<Attribute> attributes: const [Attribute.NONE]}) {
     _window;
 
     var attr = 0;
@@ -225,7 +419,7 @@ class Window {
     }
 
     for (var attribute in attributes) {
-      attr |= attribute.value;
+      attr |= attribute._value;
     }
 
     _attrset(_window, attr);
@@ -234,10 +428,13 @@ class Window {
   void border({String left: '', String right: '', String top: '', String bottom: '', String topLeft:
       '', String topRight: '', String bottomLeft: '', String bottomRight: ''}) {
 
+    _log.fine('border: this=${this}');
     _border(_window, left, right, top, bottom, topLeft, topRight, bottomLeft, bottomRight);
+    _doAutoRefresh();
   }
 
   void clear() {
+    _log.fine('clear: this=${this}');
     _wclear(_window);
     _doAutoRefresh();
   }
@@ -259,14 +456,14 @@ class Window {
     _wrefresh(_window);
   }
 
-  Future<int> wgetch() {
-    final completer = new Completer();
+  Future<Key> wgetch() {
+    final completer = new Completer<Key>();
 
     final receivePort = new ReceivePort();
 
-    receivePort.listen((key) {
+    receivePort.listen((int keyCode) {
       receivePort.close();
-      completer.complete(key);
+      completer.complete(new Key._fromKeyCode(keyCode));
     });
 
     _wgetch.send([_window, receivePort.sendPort]);
@@ -274,15 +471,9 @@ class Window {
     return completer.future;
   }
 
-  int get _window {
-    if (__window == null) {
-      throw new StateError('Window has been disposed');
-    }
-    return __window;
-  }
-
   void _doAutoRefresh() {
-    if (_autoRefresh) {
+    if (autoRefresh) {
+      _log.fine('_doAutoRefresh: this=${this}');
       refresh();
     }
   }
