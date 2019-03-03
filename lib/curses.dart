@@ -252,6 +252,7 @@ class Key {
 
   String toString() => 'Key(${name}, ${_keyCode})';
 
+  int get keyCode => _keyCode;
 }
 
 class Screen extends Window {
@@ -461,9 +462,9 @@ class Window {
 
     final receivePort = new ReceivePort();
 
-    receivePort.listen((int keyCode) {
+    receivePort.listen((keyCode) {
       receivePort.close();
-      completer.complete(new Key._fromKeyCode(keyCode));
+      completer.complete(new Key._fromKeyCode(keyCode as int));
     });
 
     _wgetch.send([_window, receivePort.sendPort]);

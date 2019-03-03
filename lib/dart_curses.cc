@@ -425,7 +425,7 @@ void wrapped_wgetch(Dart_Port dest_port_id, Dart_CObject* message) {
 	Dart_CObject* _receivePort = message->value.as_array.values[1];
 
 	int64_t window = _window->value.as_int64;
-	Dart_Port receivePort = _receivePort->value.as_send_port;
+	Dart_Port receivePort = _receivePort->value.as_send_port.id;
 	
 	int64_t key = wgetch((WINDOW*)window);
 

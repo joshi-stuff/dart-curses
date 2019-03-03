@@ -1,2 +1,2 @@
 all:
-	gcc -I/opt/dart/dart-sdk -fPIC -shared -lcurses -undefined dynamic_lookup -o libdart_curses.dylib dart_curses.cc
+	clang -I/usr/lib/dart -fPIC -shared -lcurses -undefined dynamic_lookup -o libdart_curses.so dart_curses.cc

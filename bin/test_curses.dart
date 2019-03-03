@@ -32,7 +32,7 @@ void main() {
     w.dispose();
     stdscr.dispose();
 
-    var strKey = new String.fromCharCode(key);
+    var strKey = new String.fromCharCode(key.keyCode);
     print("key = $strKey");
   });
 

@@ -13,3 +13,4 @@ packages/
 # Include when developing application packages.
 pubspec.lock
 lib/libdart_curses.dylib
+lib/libdart_curses.so
